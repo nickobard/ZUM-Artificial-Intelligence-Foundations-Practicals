@@ -1,0 +1,12 @@
+name: bi-zum
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - jupyterlab
+  - numpy
+  - ca-certificates
+  - openssl
+  - notebook
+  - certifi
+  - pygame
