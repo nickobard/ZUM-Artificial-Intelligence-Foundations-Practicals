@@ -2,6 +2,7 @@ from matplotlib.lines import Line2D
 
 from mdp import GridMDP, value_iteration
 from utils import get_action_distribution, get_grid_1, keep_direction
+from utils import UP
 import ipywidgets as widgets
 from matplotlib import patches
 import matplotlib.pyplot as plt
@@ -77,11 +78,12 @@ class Visualizer:
             current_row_U = []
             current_row_P = []
             for column in range(self.mdp.cols):
-                current_row_U.append(data[(column, 0, row)])
-                current_row_P.append(policy[column, 0, row])
+                current_row_U.append(data[(column, row)])
+                current_row_P.append(policy[column, row])
             grid.append(current_row_U)
             grid_P.append(current_row_P)
-        ax.imshow(grid, vmin=self.vmin, vmax=self.vmax, cmap=cmap, interpolation='nearest')
+        ax.imshow(grid, vmin=self.terminal_reward_min, vmax=self.terminal_reward_max, cmap=cmap,
+                  interpolation='nearest')
         ax.axis('off')
         self.draw_surroundings(grid, grid_P, ax)
 
@@ -96,10 +98,12 @@ class Visualizer:
 
     def draw_surroundings(self, grid, grid_P, ax):
         ax.add_patch(
-            patches.Rectangle((self.start_state[0][1] - 0.5, self.start_state[0][0] - 0.5), 1, 1, edgecolor='none',
+            patches.Rectangle((self.start_state[0] - 0.5, self.start_state[1] - 0.5), 1, 1,
+                              edgecolor='none',
                               facecolor='green', alpha=0.5))
         ax.add_patch(
-            patches.Rectangle((self.finish_state[0][1] - 0.5, self.finish_state[0][0] - 0.5), 1, 1, edgecolor='none',
+            patches.Rectangle((self.finish_state[0] - 0.5, self.finish_state[1] - 0.5), 1, 1,
+                              edgecolor='none',
                               facecolor='blue', alpha=0.5))
         actions_p = self.actions_path(grid_P)
         for col in range(len(grid)):
@@ -114,40 +118,51 @@ class Visualizer:
                     if (row, 0, col) in actions_p:
                         facecolor = 'blue'
                     if action:
-                        dx, dy = action[0], action[2]
+                        dx, dy = action[0], action[1]
                         if dx != 0:
                             if dx == -1:
                                 arrow = patches.FancyArrow(row - 0.1 * dx, col - 0.25 * dx, 0.1 * action[0],
-                                                           0.1 * action[2], width=0.05, edgecolor='none',
+                                                           0.1 * action[1], width=0.05, edgecolor='none',
                                                            facecolor=facecolor,
                                                            alpha=0.8)
                             else:
                                 arrow = patches.FancyArrow(row - 0.1 * dx, col + 0.25 * dx, 0.1 * action[0],
-                                                           0.1 * action[2], width=0.05, edgecolor='none',
+                                                           0.1 * action[1], width=0.05, edgecolor='none',
                                                            facecolor=facecolor,
                                                            alpha=0.8)
                         else:
                             if dy == -1:
                                 arrow = patches.FancyArrow(row + 0.1 * dx, col - 0.45 * dy, 0.1 * action[0],
-                                                           0.1 * action[2], width=0.05, edgecolor='none',
+                                                           0.1 * action[1], width=0.05, edgecolor='none',
                                                            facecolor=facecolor,
                                                            alpha=0.8)
                             else:
                                 arrow = patches.FancyArrow(row + 0.1 * dx, col + 0.1 * dy, 0.1 * action[0],
-                                                           0.1 * action[2], width=0.05, edgecolor='none',
+                                                           0.1 * action[1], width=0.05, edgecolor='none',
                                                            facecolor=facecolor,
                                                            alpha=0.8)
                         ax.add_patch(arrow)
                 value = grid[col][row]
                 ax.text(row, col - 0.1, f"{value:.2f}", va='center', ha='center')
 
+    @property
+    def start_state(self):
+        return self.grid_data['start']
+
+    @property
+    def finish_state(self):
+        return self.grid_data['finish']
+
+    @property
+    def terminals(self):
+        return self.grid_data['terminals']
+
     def actions_path(self, grid_P):
-        start = (self.start_state[0][1], 0, self.start_state[0][0])
-        visited = {start}
-        opened = deque([start])
+        visited = {self.start_state}
+        opened = deque([self.start_state])
         while opened:
             state = opened.pop()
-            action = grid_P[state[2]][state[0]]
+            action = grid_P[state[0]][state[1]]
             if action is None:
                 continue
             neighbor = tuple(np.array(state) + np.array(action))
@@ -163,16 +178,16 @@ class Visualizer:
     def draw_action_distribution(self, ax):
         ax.imshow([[1]], vmin=0, vmax=1, cmap='gray')
 
-        forwad_dir = (0, 0, -1)
+        forwad_dir = UP
 
         for prob, turn_func in self.mdp.action_distribution:
             facecolor = 'black'
             if turn_func == keep_direction:
                 facecolor = 'blue'
             dir = turn_func(forwad_dir)
-            dx, dy, dz = dir
+            dx, dy= dir
             arrow = patches.FancyArrow(0, 0, 0.25 * prob * dx + 0.1 * dx,
-                                       0.25 * prob * dz + 0.1 * dz, width=0.025, edgecolor='none',
+                                       0.25 * prob * dy + 0.1 * dy, width=0.025, edgecolor='none',
                                        facecolor=facecolor)
             ax.add_patch(arrow)
 
