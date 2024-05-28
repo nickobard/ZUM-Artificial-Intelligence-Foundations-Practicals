@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 orientations = RIGHT, UP, LEFT, DOWN = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
@@ -87,7 +88,7 @@ def get_grid_1(obstacle_reward, finish_reward, empty_reward):
 
 
 if __name__ == '__main__':
-    # Example usage:
+
     vector = (1, 0)
     print(f"Original vector: {vector}")
     angle_degree = 90
@@ -95,3 +96,15 @@ if __name__ == '__main__':
     print("Rotated vector:", rotated_vector, "by", angle_degree)
     direction = vector_to_direction(rotated_vector)
     print("Direction:", direction)
+
+    print(50 * '-')
+
+    print(get_action_distribution(0.8))
+
+    assert math.isclose(sum((p for (p, _) in get_action_distribution(0.8))),
+                        1.0, rel_tol=1e-9)
+    assert math.isclose(sum((p for (p, _) in get_action_distribution(0.1))),
+                        1.0, rel_tol=1e-9)
+
+    print(50 * '-')
+
