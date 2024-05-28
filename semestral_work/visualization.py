@@ -7,8 +7,6 @@ import ipywidgets as widgets
 from matplotlib import patches
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
-from collections import deque
-import numpy as np
 import matplotlib.gridspec as gridspec
 
 

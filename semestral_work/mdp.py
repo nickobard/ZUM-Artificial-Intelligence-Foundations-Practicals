@@ -1,6 +1,7 @@
 import numpy as np
 from utils import RIGHT, UP, LEFT, DOWN
 from utils import get_grid_1, get_action_distribution, add_tuple_vectors
+import random
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -130,9 +131,6 @@ def value_iteration(mdp, **params):
             return utilities_history, policies_history
 
 
-# ----------------------------------------------------------------------------------------------------------------------
-# Policy iteration
-# TODO
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
