@@ -141,18 +141,22 @@ class GridMDPVisualizer:
         ax.add_patch(arrow)
 
     def draw_action_distribution_plot(self, ax):
-        ax.imshow([[1]], vmin=0, vmax=1, cmap='gray')
+        # draw empty square
+        ax.imshow([[1]], vmin=0, vmax=1, cmap='gray', origin='lower')
 
         forwad_dir = UP
 
         for prob, turn_func in self.mdp.action_distribution:
-            facecolor = 'black'
             if turn_func == keep_direction:
                 facecolor = 'blue'
+            else:
+                facecolor = 'black'
+
             dir = turn_func(forwad_dir)
             dx, dy = dir
-            arrow = patches.FancyArrow(0, 0, 0.25 * prob * dx + 0.1 * dx,
-                                       0.25 * prob * dy + 0.1 * dy, width=0.025, edgecolor='none',
+            hard_offset_x, hard_offset_y = 0.1 * dx, 0.1 * dy
+            arrow = patches.FancyArrow(0, 0, 0.25 * prob * dx + hard_offset_x,
+                                       0.25 * prob * dy + hard_offset_y, width=0.025, edgecolor='none',
                                        facecolor=facecolor)
             ax.add_patch(arrow)
 
@@ -163,7 +167,6 @@ class GridMDPVisualizer:
                    label=f"Sideways probability: {(1 - self.hparams['forward_prob']) / 3:.2f}"),
         ]
 
-        # Add the custom legend to the second plot
         ax.legend(handles=custom_legend_handles, loc='lower right')
 
         ax.axis('off')
@@ -181,7 +184,7 @@ class GridMDPVisualizer:
         return self.grid_data['terminals']
 
 
-def create_interactive_plot(visualizer, terminal_reward_min, terminal_reward_max):
+def create_interactive_plot(terminal_reward_min, terminal_reward_max):
     visualizer = GridMDPVisualizer(get_grid_fn=get_grid_1,
                                    iteration_algorithm_fn=value_iteration,
                                    terminal_reward_min=terminal_reward_min,
