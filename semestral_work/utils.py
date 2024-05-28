@@ -4,6 +4,16 @@ import math
 orientations = RIGHT, UP, LEFT, DOWN = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
 
+def add_tuple_vectors(v1, v2):
+    """Return the state that results from going in this direction."""
+    if isinstance(v1, tuple):
+        direction = np.array(v1)
+    if isinstance(v2, tuple):
+        state = np.array(v2)
+    result = tuple(v1 + v2)
+    return result
+
+
 def rotate_vector_2d(vector, angle_degree):
     if isinstance(vector, tuple):
         vector = np.array(vector)
@@ -69,6 +79,7 @@ def get_action_distribution(forward_prob):
 
 def get_grid_1(obstacle_reward, finish_reward, empty_reward):
     O, F, S, _ = obstacle_reward, finish_reward, empty_reward, empty_reward
+
     grid = [[_, _, _, O, O, _, _, _, _, _, _, O, _],
             [S, _, _, O, O, _, _, _, _, _, _, O, _],
             [_, _, _, _, O, _, _, _, O, _, _, _, _],
@@ -82,13 +93,20 @@ def get_grid_1(obstacle_reward, finish_reward, empty_reward):
                  (7, 0), (7, 1), (8, 0), (8, 1), (8, 2), (8, 3), (9, 0), (9, 1),
                  (11, 4), (11, 5)]
     finish = (12, 1)
-    terminals = obstacles.append(finish)
+
+    terminals = obstacles.copy()
+    terminals.append(finish)
+
     start = (0, 4)
-    return grid, start, obstacles, finish, terminals
+
+    return {'grid': grid,
+            'start': start,
+            'obstacles': obstacles,
+            'finish': finish,
+            'terminals': terminals}
 
 
 if __name__ == '__main__':
-
     vector = (1, 0)
     print(f"Original vector: {vector}")
     angle_degree = 90
@@ -107,4 +125,3 @@ if __name__ == '__main__':
                         1.0, rel_tol=1e-9)
 
     print(50 * '-')
-
