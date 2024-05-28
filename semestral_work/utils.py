@@ -9,9 +9,9 @@ orientations = RIGHT, UP, LEFT, DOWN = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 def add_tuple_vectors(v1, v2):
     """Return the state that results from going in this direction."""
     if isinstance(v1, tuple):
-        direction = np.array(v1)
+        v1 = np.array(v1)
     if isinstance(v2, tuple):
-        state = np.array(v2)
+        v2 = np.array(v2)
     result = tuple(v1 + v2)
     return result
 
