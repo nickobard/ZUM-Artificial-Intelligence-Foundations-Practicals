@@ -1,7 +1,7 @@
 from matplotlib.lines import Line2D
 
 from mdp import GridMDP, value_iteration
-from utils import get_action_distribution, get_grid_1, keep_direction
+from utils import get_action_distribution, get_grid_1, keep_direction, actions_path
 from utils import UP
 import ipywidgets as widgets
 from matplotlib import patches
@@ -51,6 +51,8 @@ class GridMDPVisualizer:
                 if iteration_slider:
                     iteration_slider.max = len(self.utilities)
                     iteration_slider.value = len(self.utilities)
+                else:
+                    self.visualize(iteration)
             else:
                 self.visualize(iteration)
 
@@ -73,6 +75,8 @@ class GridMDPVisualizer:
         policy = self.policies[iteration - 1]
         self.draw_utility(utility, ax)
         self.draw_surroundings(ax)
+        self.draw_utility_text(utility, ax)
+        self.draw_policy(policy, ax)
         ax.axis('off')
         # self.draw_surroundings(grid, grid_P, ax)
 
@@ -97,68 +101,44 @@ class GridMDPVisualizer:
         for obstacle_pos in self.grid_data['obstacles']:
             self.draw_rect(obstacle_pos, "black", ax)
 
+    def draw_utility_text(self, utility, ax):
+        for state, value in utility.items():
+            x, y = state
+            ax.text(x, y + (0.1 if state not in self.grid_data['terminals'] else 0.0),
+                    f"{value:.2f}", va='center', ha='center')
+
     @staticmethod
     def draw_rect(position, color, ax, alpha=0.5):
         rectangle = patches.Rectangle((position[0] - 0.5, position[1] - 0.5), 1, 1, facecolor=color, alpha=alpha)
         ax.add_patch(rectangle)
 
-    def draw_policy(self, iteration, ax):
-        data = self.utilities[iteration - 1]
-        grid = []
-        for row in range(self.mdp.rows):
-            current_row = []
-            for column in range(self.mdp.cols):
-                current_row.append(data[(column, 0, row)])
-            grid.append(current_row)
+    def draw_policy(self, policy, ax):
+        path = actions_path(self.grid_data['start'], policy)
+        for policy_pos, direction in policy.items():
+            if direction is None:
+                continue
 
-    # def draw_surroundings(self, grid, grid_P, ax):
-    #     ax.add_patch(
-    #         patches.Rectangle((self.start_state[0] - 0.5, self.start_state[1] - 0.5), 1, 1,
-    #                           edgecolor='none',
-    #                           facecolor='green', alpha=0.5))
-    #     ax.add_patch(
-    #         patches.Rectangle((self.finish_state[0] - 0.5, self.finish_state[1] - 0.5), 1, 1,
-    #                           edgecolor='none',
-    #                           facecolor='blue', alpha=0.5))
-    #     actions_p = self.actions_path(grid_P)
-    #     for col in range(len(grid)):
-    #         for row in range(len(grid[0])):
-    #             if (col, row) in self.grid_data['obstacles']:
-    #                 rect = patches.Rectangle((row - 0.5, col - 0.5), 1, 1, edgecolor='none',
-    #                                          facecolor='black', alpha=0.5)
-    #                 ax.add_patch(rect)
-    #             else:
-    #                 action = grid_P[col][row]
-    #                 facecolor = 'black'
-    #                 if (row, 0, col) in actions_p:
-    #                     facecolor = 'blue'
-    #                 if action:
-    #                     dx, dy = action[0], action[1]
-    #                     if dx != 0:
-    #                         if dx == -1:
-    #                             arrow = patches.FancyArrow(row - 0.1 * dx, col - 0.25 * dx, 0.1 * action[0],
-    #                                                        0.1 * action[1], width=0.05, edgecolor='none',
-    #                                                        facecolor=facecolor,
-    #                                                        alpha=0.8)
-    #                         else:
-    #                             arrow = patches.FancyArrow(row - 0.1 * dx, col + 0.25 * dx, 0.1 * action[0],
-    #                                                        0.1 * action[1], width=0.05, edgecolor='none',
-    #                                                        facecolor=facecolor,
-    #                                                        alpha=0.8)
-    #                     else:
-    #                         if dy == -1:
-    #                             arrow = patches.FancyArrow(row + 0.1 * dx, col - 0.45 * dy, 0.1 * action[0],
-    #                                                        0.1 * action[1], width=0.05, edgecolor='none',
-    #                                                        facecolor=facecolor,
-    #                                                        alpha=0.8)
-    #                         else:
-    #                             arrow = patches.FancyArrow(row + 0.1 * dx, col + 0.1 * dy, 0.1 * action[0],
-    #                                                        0.1 * action[1], width=0.05, edgecolor='none',
-    #                                                        facecolor=facecolor,
-    #                                                        alpha=0.8)
-    #                     ax.add_patch(arrow)
-    #             value = grid[col][row]
-    #             ax.text(row, col - 0.1, f"{value:.2f}", va='center', ha='center')
+            if policy_pos in path:
+                facecolor = 'blue'
+            else:
+                facecolor = 'black'
+
+            x, y = policy_pos
+            dx, dy = direction
+
+            if dx != 0:
+                self.draw_arrow(x - 0.1 * dx, y - 0.25 * abs(dx), 0.1 * dx, 0, facecolor, ax)
+            else:
+                if dy == -1:
+                    self.draw_arrow(x, y - 0.1 * abs(dy), 0,
+                                    0.1 * dy, facecolor, ax)
+                else:
+                    self.draw_arrow(x, y - 0.4 * dy, 0,
+                                    0.1 * dy, facecolor, ax)
+
+    def draw_arrow(self, x, y, dx, dy, facecolor, ax):
+        arrow = patches.FancyArrow(x, y, dx, dy, width=0.05, edgecolor='none', facecolor=facecolor, alpha=0.8)
+        ax.add_patch(arrow)
 
     def draw_action_distribution_plot(self, ax):
         ax.imshow([[1]], vmin=0, vmax=1, cmap='gray')
@@ -241,10 +221,10 @@ if __name__ == '__main__':
                                    terminal_reward_min=-1.0,
                                    terminal_reward_max=1.0,
                                    )
-    visualizer.get_update_function(None)(iteration=30,
+    visualizer.get_update_function(None)(iteration=31,
                                          obstacle_reward=-1.0,
                                          finish_reward=1.0,
                                          empty_reward=-0.04,
                                          forward_prob=0.8,
-                                         gamma=0.9,
+                                         gamma=1.0,
                                          epsilon=1e-3)
