@@ -10,7 +10,7 @@ from collections import deque
 import numpy as np
 
 
-class Visualizer2D:
+class Visualizer:
     def __init__(self, get_grid_fn, iteration_algorithm_fn, *, terminal_reward_min=-10.0, terminal_reward_max=10.0):
 
         self.get_grid_fn = get_grid_fn
@@ -36,8 +36,7 @@ class Visualizer2D:
 
             distribution = get_action_distribution(forward_prob=hparams['forward_prob'])
 
-            self.mdp = GridMDP(start_state=self.grid_data['start'],
-                               grid=self.grid_data['grid'],
+            self.mdp = GridMDP(grid=self.grid_data['grid'],
                                action_distribution=distribution,
                                terminals=self.grid_data['terminals'],
                                gamma=hparams['gamma'])
@@ -190,13 +189,43 @@ class Visualizer2D:
         ax.axis('off')
 
 
-if __name__ == '__main__':
-    VMIN = -1.0
-    VMAX = 1.0
+def create_interactive_plot(visualizer, terminal_reward_min, terminal_reward_max):
+    visualizer = Visualizer(get_grid_fn=get_grid_1,
+                            iteration_algorithm_fn=value_iteration,
+                            terminal_reward_min=terminal_reward_min,
+                            terminal_reward_max=terminal_reward_max,
+                            )
 
-    visualizer = Visualizer2D(get_grid_fn=get_grid_1,
-                              iteration_algorithm_fn=value_iteration,
-                              terminal_reward_min=VMIN, terminal_reward_max=VMAX,
-                              )
+    slider_style = {'description_width': 'initial'}
+
+    obstacle_reward_slider = widgets.FloatSlider(min=terminal_reward_min, max=0.0, step=0.01, value=-1.0,
+                                                 description='Obstacle state reward')
+    finish_reward_slider = widgets.FloatSlider(min=0.0, max=terminal_reward_max, step=0.01, value=1.0,
+                                               description='Finish state reward')
+    empty_reward_slider = widgets.FloatSlider(min=terminal_reward_min, max=terminal_reward_max, step=0.01, value=-0.04,
+                                              description='Empty state reward')
+    forward_prob_slider = widgets.FloatSlider(min=0.0, max=1.0, step=0.01, value=0.8,
+                                              description='Forward probability', style=slider_style)
+    gamma_slider = widgets.FloatSlider(min=0.01, max=1.0, step=0.01, value=0.9, description='Gamma')
+    epsilon_slider = widgets.FloatSlider(min=1e-6, max=1e-0, step=1e-6, value=1e-3, description='Epsilon',
+                                         readout_format='.2e')
+    interactive_plot = widgets.interactive(visualizer.update,
+                                           iteration=visualizer.iteration_slider,
+                                           obstacle_reward=obstacle_reward_slider,
+                                           finish_reward=finish_reward_slider,
+                                           empty_reward=empty_reward_slider,
+                                           forward_prob=forward_prob_slider,
+                                           gamma=gamma_slider,
+                                           epsilon=epsilon_slider
+                                           )
+    display(interactive_plot)
+
+
+if __name__ == '__main__':
+    visualizer = Visualizer(get_grid_fn=get_grid_1,
+                            iteration_algorithm_fn=value_iteration,
+                            terminal_reward_min=-1.0,
+                            terminal_reward_max=1.0,
+                            )
     visualizer.update(30, obstacle_reward=-1.0,
                       finish_reward=1.0, empty_reward=-0.04, forward_prob=0.8, gamma=0.9, epsilon=1e-3)
