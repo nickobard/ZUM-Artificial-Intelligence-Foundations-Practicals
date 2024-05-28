@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from collections import deque
 import numpy as np
+import matplotlib.gridspec as gridspec
 
 
 class GridMDPVisualizer:
@@ -57,13 +58,16 @@ class GridMDPVisualizer:
 
     def visualize(self, iteration):
 
-        fig, axes = plt.subplots(ncols=2, figsize=(12, 20), constrained_layout=True,
-                                 gridspec_kw={'width_ratios': [self.mdp.cols / self.mdp.rows, 1]})
-        self.draw_utility(iteration, axes[0])
-        self.draw_action_distribution(axes[1])
+        fig = plt.figure(figsize=(12, 20), constrained_layout=True)
+        gs = gridspec.GridSpec(nrows=1, ncols=2, width_ratios=[self.mdp.cols / self.mdp.rows, 1], figure=fig)
+        ax_grid = fig.add_subplot(gs[0, 0])
+        ax_distribution = fig.add_subplot(gs[0, 1])
+
+        self.draw_grid_plot(iteration, ax_grid)
+        self.draw_action_distribution_plot(ax_distribution)
         plt.show()
 
-    def draw_utility(self, iteration, ax):
+    def draw_grid_plot(self, iteration, ax):
         # Define the colors - each entry in the list corresponds to a point in the colormap range
         colors = ["salmon", "white", "lightblue"]
 
@@ -144,37 +148,7 @@ class GridMDPVisualizer:
                 value = grid[col][row]
                 ax.text(row, col - 0.1, f"{value:.2f}", va='center', ha='center')
 
-    @property
-    def start_state(self):
-        return self.grid_data['start']
-
-    @property
-    def finish_state(self):
-        return self.grid_data['finish']
-
-    @property
-    def terminals(self):
-        return self.grid_data['terminals']
-
-    def actions_path(self, grid_P):
-        visited = {self.start_state}
-        opened = deque([self.start_state])
-        while opened:
-            state = opened.pop()
-            action = grid_P[state[0]][state[1]]
-            if action is None:
-                continue
-            neighbor = tuple(np.array(state) + np.array(action))
-            if neighbor not in self.mdp.states:
-                continue
-            if neighbor in self.terminals:
-                continue
-            if neighbor not in visited:
-                opened.append(neighbor)
-                visited.add(neighbor)
-        return visited
-
-    def draw_action_distribution(self, ax):
+    def draw_action_distribution_plot(self, ax):
         ax.imshow([[1]], vmin=0, vmax=1, cmap='gray')
 
         forwad_dir = UP
@@ -201,6 +175,18 @@ class GridMDPVisualizer:
         ax.legend(handles=custom_legend_handles, loc='lower right')
 
         ax.axis('off')
+
+    @property
+    def start_state(self):
+        return self.grid_data['start']
+
+    @property
+    def finish_state(self):
+        return self.grid_data['finish']
+
+    @property
+    def terminals(self):
+        return self.grid_data['terminals']
 
 
 def create_interactive_plot(visualizer, terminal_reward_min, terminal_reward_max):

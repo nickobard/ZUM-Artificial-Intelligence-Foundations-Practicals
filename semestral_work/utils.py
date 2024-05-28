@@ -1,3 +1,5 @@
+from collections import deque
+
 import numpy as np
 import math
 
@@ -75,6 +77,22 @@ def get_action_distribution(forward_prob):
     complement_prob = 1 - forward_prob
     distributions.extend(((complement_prob / len(turn_actions), action) for action in turn_actions))
     return distributions
+
+
+def actions_path(start, policy):
+    visited = {start}
+    opened = deque([start])
+    states = policy.keys()
+    while opened:
+        state = opened.pop()
+        action = policy[state]
+        if action is None:
+            continue
+        next_state = add_tuple_vectors(state, action)
+        if next_state in states and next_state not in visited:
+            visited.add(next_state)
+            opened.append(next_state)
+    return visited
 
 
 def get_grid_1(obstacle_reward, finish_reward, empty_reward):
