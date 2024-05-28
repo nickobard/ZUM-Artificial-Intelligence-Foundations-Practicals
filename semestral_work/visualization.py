@@ -26,6 +26,7 @@ class GridMDPVisualizer:
         self.mdp = None
         self.utilities = None
         self.policies = None
+        self.current_iteration = None
 
     def get_visualization_data(self):
         self.grid_data = get_grid_1(obstacle_reward=self.hparams['obstacle_reward'],
@@ -41,6 +42,12 @@ class GridMDPVisualizer:
 
         self.utilities, self.policies = self.iteration_algorithm_fn(self.mdp, **self.hparams)
 
+    def iteration_plot(self, iteration, **hparams):
+        self.hparams = hparams
+        self.get_visualization_data()
+        self.current_iteration = iteration
+        self.visualize()
+
     def get_update_function(self, iteration_slider):
         iteration_slider = iteration_slider
 
@@ -48,31 +55,31 @@ class GridMDPVisualizer:
             if self.hparams != hparams:
                 self.hparams = hparams
                 self.get_visualization_data()
-                if iteration_slider:
-                    iteration_slider.max = len(self.utilities)
-                    iteration_slider.value = len(self.utilities)
-                else:
-                    self.visualize(iteration)
-            else:
-                self.visualize(iteration)
+                self.current_iteration = len(self.utilities)
+                iteration_slider.max = len(self.utilities)
+                iteration_slider.value = len(self.utilities)
+                self.visualize()
+            elif self.current_iteration != iteration:
+                self.current_iteration = iteration
+                self.visualize()
 
         return update
 
-    def visualize(self, iteration):
+    def visualize(self):
 
         fig = plt.figure(figsize=(12, 20), constrained_layout=True)
         gs = gridspec.GridSpec(nrows=1, ncols=2, width_ratios=[self.mdp.cols / self.mdp.rows, 1], figure=fig)
         ax_grid = fig.add_subplot(gs[0, 0])
         ax_distribution = fig.add_subplot(gs[0, 1])
 
-        self.draw_grid_plot(iteration, ax_grid)
+        self.draw_grid_plot(ax_grid)
         self.draw_action_distribution_plot(ax_distribution)
         plt.show()
 
-    def draw_grid_plot(self, iteration, ax):
+    def draw_grid_plot(self, ax):
 
-        utility = self.utilities[iteration - 1]
-        policy = self.policies[iteration - 1]
+        utility = self.utilities[self.current_iteration - 1]
+        policy = self.policies[self.current_iteration - 1]
         self.draw_utility(utility, ax)
         self.draw_surroundings(ax)
         self.draw_utility_text(utility, ax)
@@ -184,7 +191,7 @@ class GridMDPVisualizer:
         return self.grid_data['terminals']
 
 
-def create_interactive_plot(terminal_reward_min, terminal_reward_max):
+def create_interactive_plot(terminal_reward_min=-1.0, terminal_reward_max=1.0):
     visualizer = GridMDPVisualizer(get_grid_fn=get_grid_1,
                                    iteration_algorithm_fn=value_iteration,
                                    terminal_reward_min=terminal_reward_min,
@@ -224,10 +231,10 @@ if __name__ == '__main__':
                                    terminal_reward_min=-1.0,
                                    terminal_reward_max=1.0,
                                    )
-    visualizer.get_update_function(None)(iteration=31,
-                                         obstacle_reward=-1.0,
-                                         finish_reward=1.0,
-                                         empty_reward=-0.04,
-                                         forward_prob=0.8,
-                                         gamma=1.0,
-                                         epsilon=1e-3)
+    visualizer.iteration_plot(iteration=31,
+                              obstacle_reward=-1.0,
+                              finish_reward=1.0,
+                              empty_reward=-0.04,
+                              forward_prob=0.8,
+                              gamma=1.0,
+                              epsilon=1e-3)
