@@ -1,6 +1,8 @@
+import pprint
+
 import numpy as np
 from utils import RIGHT, UP, LEFT, DOWN
-from utils import grid_1, get_action_distribution, add_tuple_vectors
+from utils import get_grid, grid_1, get_action_distribution, add_tuple_vectors
 import random
 
 
@@ -133,7 +135,7 @@ def value_iteration(mdp, **params):
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    grid_data = grid_1(-1.0, 1.0, -0.04)
+    grid_data = get_grid(-1.0, 1.0, -0.04, grid_structure_fn=grid_1)
     mdp = GridMDP(grid_data['grid'], get_action_distribution(0.8), terminals=grid_data['terminals'],
                   gamma=0.9)
     print("Terminals:", mdp.terminals)

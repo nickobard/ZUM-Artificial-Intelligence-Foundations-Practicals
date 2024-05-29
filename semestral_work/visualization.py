@@ -1,3 +1,5 @@
+import pprint
+
 from matplotlib.lines import Line2D
 
 from mdp import GridMDP, value_iteration
@@ -14,8 +16,8 @@ class GridMDPVisualizer:
     def __init__(self, grid_structure_fn=grid_1,
                  iteration_algorithm_fn=value_iteration,
                  *,
-                 terminal_reward_min=-10.0,
-                 terminal_reward_max=10.0):
+                 terminal_reward_min=-1.0,
+                 terminal_reward_max=1.0):
 
         self.grid_structure_fn = grid_structure_fn
         self.iteration_algorithm_fn = iteration_algorithm_fn
@@ -194,45 +196,65 @@ class GridMDPVisualizer:
         return self.grid_data['terminals']
 
 
-def create_interactive_plot(grid_fn, terminal_reward_min=-1.0, terminal_reward_max=1.0):
-    visualizer = GridMDPVisualizer(grid_structure_fn=grid_fn,
-                                   iteration_algorithm_fn=value_iteration,
-                                   terminal_reward_min=terminal_reward_min,
-                                   terminal_reward_max=terminal_reward_max,
-                                   )
+class InteractivePlot:
+    def __init__(self, grid_fn, terminal_reward_min=-1.0, terminal_reward_max=1.0, hparam_print_button=False):
+        self.visualizer = GridMDPVisualizer(grid_structure_fn=grid_fn,
+                                            iteration_algorithm_fn=value_iteration,
+                                            terminal_reward_min=terminal_reward_min,
+                                            terminal_reward_max=terminal_reward_max,
+                                            )
+        slider_style = {'description_width': 'initial'}
+        self.iteration_slider = widgets.IntSlider(min=1, max=None, step=1, value=None,
+                                                  description='Iteration')
+        self.obstacle_reward_slider = widgets.FloatSlider(min=terminal_reward_min, max=0.0, step=0.01, value=-1.0,
+                                                          description='Obstacle state reward', style=slider_style)
+        self.finish_reward_slider = widgets.FloatSlider(min=0.0, max=terminal_reward_max, step=0.01, value=1.0,
+                                                        description='Finish state reward', style=slider_style)
+        self.empty_reward_slider = widgets.FloatSlider(min=terminal_reward_min, max=terminal_reward_max, step=0.01,
+                                                       value=-0.04,
+                                                       description='Empty state reward', style=slider_style)
+        self.forward_prob_slider = widgets.FloatSlider(min=0.0, max=1.0, step=0.01, value=0.8,
+                                                       description='Forward probability', style=slider_style)
+        self.gamma_slider = widgets.FloatSlider(min=0.01, max=1.0, step=0.01, value=0.9, description='Gamma')
+        self.epsilon_slider = widgets.FloatSlider(min=1e-6, max=1e-0, step=1e-6, value=1e-3, description='Epsilon',
+                                                  readout_format='.2e')
+        self.interactive_plot = widgets.interactive(self.visualizer.get_update_function(self.iteration_slider),
+                                                    iteration=self.iteration_slider,
+                                                    obstacle_reward=self.obstacle_reward_slider,
+                                                    finish_reward=self.finish_reward_slider,
+                                                    empty_reward=self.empty_reward_slider,
+                                                    forward_prob=self.forward_prob_slider,
+                                                    gamma=self.gamma_slider,
+                                                    epsilon=self.epsilon_slider
+                                                    )
+        self.hparams_print_output = widgets.Output() if hparam_print_button else None
 
-    slider_style = {'description_width': 'initial'}
+    def show(self):
+        to_display = [self.interactive_plot]
+        if self.hparams_print_output:
+            print_button = widgets.Button(description="Print Hyperparameters")
+            print_button.on_click(self.print_hparams)
+            to_display.extend([print_button, self.hparams_print_output])
+        display(*to_display)
 
-    iteration_slider = widgets.IntSlider(min=1, max=None, step=1, value=None,
-                                         description='Iteration')
-    obstacle_reward_slider = widgets.FloatSlider(min=terminal_reward_min, max=0.0, step=0.01, value=-1.0,
-                                                 description='Obstacle state reward')
-    finish_reward_slider = widgets.FloatSlider(min=0.0, max=terminal_reward_max, step=0.01, value=1.0,
-                                               description='Finish state reward')
-    empty_reward_slider = widgets.FloatSlider(min=terminal_reward_min, max=terminal_reward_max, step=0.01, value=-0.04,
-                                              description='Empty state reward')
-    forward_prob_slider = widgets.FloatSlider(min=0.0, max=1.0, step=0.01, value=0.8,
-                                              description='Forward probability', style=slider_style)
-    gamma_slider = widgets.FloatSlider(min=0.01, max=1.0, step=0.01, value=0.9, description='Gamma')
-    epsilon_slider = widgets.FloatSlider(min=1e-6, max=1e-0, step=1e-6, value=1e-3, description='Epsilon',
-                                         readout_format='.2e')
-    interactive_plot = widgets.interactive(visualizer.get_update_function(iteration_slider),
-                                           iteration=iteration_slider,
-                                           obstacle_reward=obstacle_reward_slider,
-                                           finish_reward=finish_reward_slider,
-                                           empty_reward=empty_reward_slider,
-                                           forward_prob=forward_prob_slider,
-                                           gamma=gamma_slider,
-                                           epsilon=epsilon_slider
-                                           )
-    display(interactive_plot)
+    def print_hparams(self, button):
+        with self.hparams_print_output:
+            self.hparams_print_output.clear_output()
+            values = {
+                'iteration': self.iteration_slider.value,
+                'obstacle_reward': self.obstacle_reward_slider.value,
+                'finish_reward': self.finish_reward_slider.value,
+                'empty_reward': self.empty_reward_slider.value,
+                'forward_prob': self.forward_prob_slider.value,
+                'gamma': self.gamma_slider.value,
+                'epsilon': self.epsilon_slider.value,
+            }
+            pprint.pprint(values)
 
 
 if __name__ == '__main__':
     visualizer = GridMDPVisualizer(grid_structure_fn=grid_1,
-                                   iteration_algorithm_fn=value_iteration,
-                                   terminal_reward_min=-1.0,
-                                   terminal_reward_max=1.0,
+                                   iteration_algorithm_fn=value_iteration
                                    )
     visualizer.iteration_plot(iteration=31,
                               obstacle_reward=-1.0,

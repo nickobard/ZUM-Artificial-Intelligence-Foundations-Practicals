@@ -118,12 +118,12 @@ def parse_grid(grid_variables):
     obstacles = []
     finish = None
     start = None
-
+    grid_variables_reversed_rows = grid_variables[::-1]
     # positions are given as (x, y) pairs, where origin (0, 0) is in the lower left corner of grid.
-    for y in range(len(grid_variables))[::-1]:
+    for y in range(len(grid_variables_reversed_rows)):
         current_row = []
-        for x in range(len(grid_variables[y])):
-            state_type, state_reward = grid_variables[y][x]
+        for x in range(len(grid_variables_reversed_rows[y])):
+            state_type, state_reward = grid_variables_reversed_rows[y][x]
             if state_type == "obstacle":
                 obstacles.append((x, y))
             elif state_type == "finish":
