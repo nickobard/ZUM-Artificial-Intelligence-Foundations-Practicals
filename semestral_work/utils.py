@@ -95,27 +95,46 @@ def actions_path(start, policy):
     return visited
 
 
-def get_grid_1(obstacle_reward, finish_reward, empty_reward):
-    O, F, S, _ = obstacle_reward, finish_reward, empty_reward, empty_reward
-
-    grid = [[_, _, _, O, O, _, _, _, _, _, _, O, _],
+def grid_1(O, F, S, _):
+    return [[_, _, _, O, O, _, _, _, _, _, _, O, _],
             [S, _, _, O, O, _, _, _, _, _, _, O, _],
             [_, _, _, _, O, _, _, _, O, _, _, _, _],
             [_, _, _, _, O, _, _, _, O, _, _, _, _],
             [_, O, _, _, _, _, _, O, O, O, _, _, F],
             [_, O, _, _, _, _, _, O, O, O, _, _, _]]
 
+
+def get_grid(obstacle_reward, finish_reward, empty_reward, grid_structure_fn=grid_1):
+    O, F, S, _ = (("obstacle", obstacle_reward),
+                  ("finish", finish_reward),
+                  ("start", empty_reward),
+                  ("empty", empty_reward))
+    variables_grid = grid_structure_fn(O, F, S, _)
+    return parse_grid(variables_grid)
+
+
+def parse_grid(grid_variables):
+    grid = []
+    obstacles = []
+    finish = None
+    start = None
+
     # positions are given as (x, y) pairs, where origin (0, 0) is in the lower left corner of grid.
-    obstacles = [(1, 0), (1, 1),
-                 (3, 4), (3, 5), (4, 2), (4, 3), (4, 4), (4, 5),
-                 (7, 0), (7, 1), (8, 0), (8, 1), (8, 2), (8, 3), (9, 0), (9, 1),
-                 (11, 4), (11, 5)]
-    finish = (12, 1)
+    for y in range(len(grid_variables))[::-1]:
+        current_row = []
+        for x in range(len(grid_variables[y])):
+            state_type, state_reward = grid_variables[y][x]
+            if state_type == "obstacle":
+                obstacles.append((x, y))
+            elif state_type == "finish":
+                finish = (x, y)
+            elif state_type == "start":
+                start = (x, y)
+            current_row.append(state_reward)
+        grid.append(current_row)
 
     terminals = obstacles.copy()
     terminals.append(finish)
-
-    start = (0, 4)
 
     return {'grid': grid,
             'start': start,

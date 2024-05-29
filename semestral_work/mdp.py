@@ -1,6 +1,6 @@
 import numpy as np
 from utils import RIGHT, UP, LEFT, DOWN
-from utils import get_grid_1, get_action_distribution, add_tuple_vectors
+from utils import grid_1, get_action_distribution, add_tuple_vectors
 import random
 
 
@@ -55,7 +55,6 @@ class GridMDP(MDP):
     def __init__(self, grid, action_distribution, terminals, gamma=.9):
 
         rewards = dict()
-        reversed_rows_grid = grid[::-1]
         self.states = set()
         self.rows = len(grid)
         self.cols = len(grid[0])
@@ -63,7 +62,7 @@ class GridMDP(MDP):
         for x in range(self.cols):
             for y in range(self.rows):
                 self.states.add((x, y))
-                rewards[(x, y)] = reversed_rows_grid[y][x]
+                rewards[(x, y)] = grid[y][x]
 
         actions_list = [LEFT, UP, DOWN, RIGHT]
         self.action_distribution = action_distribution
@@ -134,7 +133,7 @@ def value_iteration(mdp, **params):
 # ----------------------------------------------------------------------------------------------------------------------
 
 if __name__ == '__main__':
-    grid_data = get_grid_1(-1.0, 1.0, -0.04)
+    grid_data = grid_1(-1.0, 1.0, -0.04)
     mdp = GridMDP(grid_data['grid'], get_action_distribution(0.8), terminals=grid_data['terminals'],
                   gamma=0.9)
     print("Terminals:", mdp.terminals)

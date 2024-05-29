@@ -1,7 +1,7 @@
 from matplotlib.lines import Line2D
 
 from mdp import GridMDP, value_iteration
-from utils import get_action_distribution, get_grid_1, keep_direction, actions_path
+from utils import get_action_distribution, get_grid, grid_1, keep_direction, actions_path
 from utils import UP
 import ipywidgets as widgets
 from matplotlib import patches
@@ -11,9 +11,13 @@ import matplotlib.gridspec as gridspec
 
 
 class GridMDPVisualizer:
-    def __init__(self, get_grid_fn, iteration_algorithm_fn, *, terminal_reward_min=-10.0, terminal_reward_max=10.0):
+    def __init__(self, grid_structure_fn=grid_1,
+                 iteration_algorithm_fn=value_iteration,
+                 *,
+                 terminal_reward_min=-10.0,
+                 terminal_reward_max=10.0):
 
-        self.get_grid_fn = get_grid_fn
+        self.grid_structure_fn = grid_structure_fn
         self.iteration_algorithm_fn = iteration_algorithm_fn
 
         self.terminal_reward_min = terminal_reward_min
@@ -27,9 +31,10 @@ class GridMDPVisualizer:
         self.current_iteration = None
 
     def get_visualization_data(self):
-        self.grid_data = get_grid_1(obstacle_reward=self.hparams['obstacle_reward'],
-                                    finish_reward=self.hparams['finish_reward'],
-                                    empty_reward=self.hparams['empty_reward'])
+        self.grid_data = get_grid(obstacle_reward=self.hparams['obstacle_reward'],
+                                  finish_reward=self.hparams['finish_reward'],
+                                  empty_reward=self.hparams['empty_reward'],
+                                  grid_structure_fn=self.grid_structure_fn)
 
         distribution = get_action_distribution(forward_prob=self.hparams['forward_prob'])
 
@@ -189,8 +194,8 @@ class GridMDPVisualizer:
         return self.grid_data['terminals']
 
 
-def create_interactive_plot(terminal_reward_min=-1.0, terminal_reward_max=1.0):
-    visualizer = GridMDPVisualizer(get_grid_fn=get_grid_1,
+def create_interactive_plot(grid_fn, terminal_reward_min=-1.0, terminal_reward_max=1.0):
+    visualizer = GridMDPVisualizer(grid_structure_fn=grid_fn,
                                    iteration_algorithm_fn=value_iteration,
                                    terminal_reward_min=terminal_reward_min,
                                    terminal_reward_max=terminal_reward_max,
@@ -224,7 +229,7 @@ def create_interactive_plot(terminal_reward_min=-1.0, terminal_reward_max=1.0):
 
 
 if __name__ == '__main__':
-    visualizer = GridMDPVisualizer(get_grid_fn=get_grid_1,
+    visualizer = GridMDPVisualizer(grid_structure_fn=grid_1,
                                    iteration_algorithm_fn=value_iteration,
                                    terminal_reward_min=-1.0,
                                    terminal_reward_max=1.0,
