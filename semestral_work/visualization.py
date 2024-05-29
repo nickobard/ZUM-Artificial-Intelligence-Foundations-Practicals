@@ -232,7 +232,9 @@ class InteractivePlot:
     def show(self):
         to_display = [self.interactive_plot]
         if self.hparams_print_output:
-            print_button = widgets.Button(description="Print Hyperparameters")
+            print_button = widgets.Button(description="Print hyperparameters",
+                                          layout=widgets.Layout(width='300px', min_width='300px'),
+                                          style={'description_width': 'initial'})
             print_button.on_click(self.print_hparams)
             to_display.extend([print_button, self.hparams_print_output])
         display(*to_display)

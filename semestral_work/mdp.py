@@ -111,6 +111,9 @@ def expected_utility(a, s, U, mdp):
 
 
 def value_iteration(mdp, **params):
+
+    iter_limit = 1000
+
     utilities_history = []
     policies_history = []
 
@@ -119,7 +122,9 @@ def value_iteration(mdp, **params):
     policies_history.append(best_policy(mdp, U_current))
 
     actions, R, T, gamma = mdp.actions, mdp.R, mdp.T, mdp.gamma
-    while True:
+
+    i = 0
+    while i < iter_limit:
         delta = 0.0
         U_previous = U_current.copy()
         for s in mdp.states:
@@ -130,6 +135,7 @@ def value_iteration(mdp, **params):
         policies_history.append(best_policy(mdp, U_current))
         if delta <= params['epsilon'] * (1 - gamma) / gamma:
             return utilities_history, policies_history
+        i += 1
 
 
 # ----------------------------------------------------------------------------------------------------------------------
