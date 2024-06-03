@@ -3,7 +3,7 @@ from IPython.display import HTML
 
 
 def print_source(*functions):
-    """Print the source code for the given function(s)."""
+    """Print the source code for the given function(s) or class(es)."""
     source_code = '\n\n'.join(getsource(fn) for fn in functions)
     try:
         from pygments.formatters import HtmlFormatter

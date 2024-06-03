@@ -7,7 +7,7 @@ orientations = RIGHT, UP, LEFT, DOWN = [(1, 0), (0, 1), (-1, 0), (0, -1)]
 
 
 def add_tuple_vectors(v1, v2):
-    """Return the state that results from going in this direction."""
+    """Add two tuple vectors and return a tuple vector."""
     if isinstance(v1, tuple):
         v1 = np.array(v1)
     if isinstance(v2, tuple):
@@ -17,6 +17,7 @@ def add_tuple_vectors(v1, v2):
 
 
 def rotate_vector_2d(vector, angle_degree):
+    """Rotate a vector by a specified angle in degrees."""
     if isinstance(vector, tuple):
         vector = np.array(vector)
     angle_rad = np.radians(angle_degree)
@@ -31,6 +32,7 @@ def rotate_vector_2d(vector, angle_degree):
 
 
 def normalize_vector(vector):
+    """Normalize a vector."""
     # Compute the Euclidean norm (magnitude) of the vector
     magnitude = np.linalg.norm(vector)
 
@@ -44,42 +46,50 @@ def normalize_vector(vector):
 
 
 def vector_to_direction(vector):
+    """Convert a vector to the closest direction unit vector - up, right, left or down."""
     return np.round(normalize_vector(vector)).astype(int)
 
 
-def keep_direction(vector):
-    return np.array(vector)
+def keep_direction(direction):
+    return np.array(direction)
 
 
-def turn_up(vector):
-    # Rotate -90 degrees around the y-axis
-    rotated_vector = rotate_vector_2d(vector, 90)
+def turn_up(direction):
+    # Rotate 90 degrees
+    rotated_vector = rotate_vector_2d(direction, 90)
     direction = vector_to_direction(rotated_vector)
     return direction
 
 
-def turn_down(vector):
-    # Rotate 90 degrees around the y-axis
-    rotated_vector = rotate_vector_2d(vector, -90)
+def turn_down(direction):
+    # Rotate -90 degrees
+    rotated_vector = rotate_vector_2d(direction, -90)
     direction = vector_to_direction(rotated_vector)
     return direction
 
 
-def turn_backward(vector):
-    # Rotate 180 degrees around the y-axis
-    return -np.array(vector)
+def turn_backward(direction):
+    return -np.array(direction)
 
 
 def get_action_distribution(forward_prob):
+    """
+    Given probability for the keeping forward direction action, compute probabilities
+    for each of the turn actions
+    """
     distributions = [(forward_prob, keep_direction)]
     turn_actions = [turn_up, turn_down, turn_backward]
 
+    # probability of turning
     complement_prob = 1 - forward_prob
     distributions.extend(((complement_prob / len(turn_actions), action) for action in turn_actions))
     return distributions
 
 
 def actions_path(start, policy):
+    """
+    BFS like algorithm to find the path from start state to the finish state.
+    """
     visited = {start}
     opened = deque([start])
     states = policy.keys()
@@ -144,8 +154,10 @@ def parse_grid(grid_variables):
     obstacles = []
     finish = None
     start = None
-    grid_variables_reversed_rows = grid_variables[::-1]
+
     # positions are given as (x, y) pairs, where origin (0, 0) is in the lower left corner of grid.
+    # therefore we reverse rows of the matrix for 0 index to start from the bottom row.
+    grid_variables_reversed_rows = grid_variables[::-1]
     for y in range(len(grid_variables_reversed_rows)):
         current_row = []
         for x in range(len(grid_variables_reversed_rows[y])):

@@ -13,6 +13,9 @@ import matplotlib.gridspec as gridspec
 
 
 class GridMDPVisualizer:
+    """Interactive visualization of an GridMDP and its solution for different hyperparameter values and iterations
+    of the value iteration algorithm."""
+
     def __init__(self, grid_structure_fn=grid_1,
                  iteration_algorithm_fn=value_iteration,
                  *,
@@ -197,6 +200,10 @@ class GridMDPVisualizer:
 
 
 class InteractivePlot:
+    """
+    Creates an interactive plot with sliders for GridMDPVisualizer.
+    """
+
     def __init__(self, grid_fn, terminal_reward_min=-1.0, terminal_reward_max=1.0, hparam_print_button=False):
         self.visualizer = GridMDPVisualizer(grid_structure_fn=grid_fn,
                                             iteration_algorithm_fn=value_iteration,

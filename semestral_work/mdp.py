@@ -10,13 +10,10 @@ import random
 # Base MDP
 
 class MDP:
-    """A Markov Decision Process, defined by an initial state, transition model,
-    and reward function. We also keep track of a gamma value, for use by
-    algorithms. The transition model is represented somewhat differently from
-    the text. Instead of P(s' | s, a) being a probability number for each
-    state/state/action triplet, we instead have T(s, a) return a
-    list of (p, s') pairs. We also keep track of the possible states,
-    terminal states, and actions for each state. [Page 646]"""
+    """A Markov Decision Process, defined by a transition model, set of all states, an action list, rewards, terminals
+    (obstacle and finish states), and gamma value used later in algorithms. The transition model is
+    represented by T(state, action) to return a list of (probability of applied action, state after transition)
+    pairs."""
 
     def __init__(self, actions_list,
                  terminals, transitions, rewards, gamma=0.9):
@@ -40,8 +37,7 @@ class MDP:
 
     def actions(self, state):
         """Return a list of actions that can be performed in this state. By default, a
-        fixed list of actions, except for terminal states. Override this
-        method if you need to specialize by state."""
+        fixed list of actions, except for terminal states."""
 
         if state in self.terminals:
             return [None]
@@ -53,23 +49,30 @@ class MDP:
 # Grid MDP
 
 class GridMDP(MDP):
+    """
+    A Markov Decision Process for the 2D grid environment. Agent in this environment can go into four directions -
+    left, up, down and right. For every action there is also defined an action distribution, which tells the
+    probability of going to the intended direction.
+    """
 
     def __init__(self, grid, action_distribution, terminals, gamma=.9):
-
         rewards = dict()
         self.states = set()
         self.rows = len(grid)
         self.cols = len(grid[0])
 
+        # convert grid into states with associated reward values.
         for x in range(self.cols):
             for y in range(self.rows):
                 self.states.add((x, y))
                 rewards[(x, y)] = grid[y][x]
 
+        # list of all actions that may be executed from each non-terminal state.
         actions_list = [LEFT, UP, DOWN, RIGHT]
         self.action_distribution = action_distribution
 
         transitions = dict()
+        # create transition model
         for s in self.states:
             transitions[s] = dict()
             for a in actions_list:
@@ -80,6 +83,7 @@ class GridMDP(MDP):
                          rewards=rewards, gamma=gamma)
 
     def calculate_T(self, state, action):
+        """Function to calculate a transition model for the 2D environment."""
         return [(prob, self.go(state, transform(action))) for prob, transform in self.action_distribution]
 
     def T(self, state, action):
@@ -96,7 +100,7 @@ class GridMDP(MDP):
 
 def best_policy(mdp, U):
     """Given an MDP and a utility function U, determine the best policy,
-    as a mapping from state to action. [Equation 17.4]"""
+    as a mapping from state to action."""
 
     pi = {}
     for s in mdp.states:
@@ -105,18 +109,23 @@ def best_policy(mdp, U):
 
 
 def expected_utility(a, s, U, mdp):
-    """The expected utility of doing a in state s, according to the MDP and U."""
-
+    """The expected utility of doing action a in state s, according to the MDP and U."""
     return sum(p * U[s1] for (p, s1) in mdp.T(s, a))
 
 
 def value_iteration(mdp, **params):
-
+    """
+    Value iteration algorithm for MDP. It takes an MPD and epsilon parameters, and iterates utilities and policies
+    until the utility converges enough. Utilities and policy histories are stored for interactive visualizations.
+    There is a maximum limit for iterations, so it has some execution time limit.
+    """
+    # iterations limit
     iter_limit = 1000
 
     utilities_history = []
     policies_history = []
 
+    # store the default utility and policy
     U_current = mdp.rewards.copy()
     utilities_history.append(U_current.copy())
     policies_history.append(best_policy(mdp, U_current))
@@ -128,11 +137,17 @@ def value_iteration(mdp, **params):
         delta = 0.0
         U_previous = U_current.copy()
         for s in mdp.states:
+            # compute utility for the current state
             U_current[s] = R(s) + gamma * max(sum(p * U_previous[s1] for (p, s1) in T(s, a))
                                               for a in mdp.actions(s))
+            # update delta if absolute difference of two last utilities is the highest
             delta = max(delta, abs(U_current[s] - U_previous[s]))
+
+        # store current utility and policy
         utilities_history.append(U_current.copy())
         policies_history.append(best_policy(mdp, U_current))
+
+        # check if utilities converged enough
         if delta <= params['epsilon'] * (1 - gamma) / gamma:
             return utilities_history, policies_history
         i += 1
