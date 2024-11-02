@@ -8,5 +8,4 @@ dependencies:
   - ca-certificates
   - openssl
   - notebook
-  - certifi
   - pygame
