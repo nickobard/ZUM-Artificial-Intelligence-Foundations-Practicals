@@ -357,8 +357,8 @@ def a_star_search(graph, start, end, surface):
 1. **Clone the Repository**
 
    ```bash
-   git clone https://github.com/yourusername/maze-pathfinding.git
-   cd maze-pathfinding
+   git clone git@github.com:nickobard/ZUM-Artificial-Intelligence-Foundations-Practicals.git
+   cd task01
    ```
 
 2. **Install Dependencies**
